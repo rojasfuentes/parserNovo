@@ -1,18 +1,19 @@
-#from loadFiles import file_path , master_path, nota
+from loadFiles import order_path , master_path, nota
 import re
 import pandas as pd
+import PySimpleGUI as sg
 
 # TEST : Nota
-nota = 100
+#nota = 100
 ## TEST: df_parser
-file_path = r'C:\Users\JFROJAS\Desktop\PARSER\Novo\Archivos\03 Order_Detail_Report_Mexico_original - MEDISITK.xlsx'
-df = pd.read_excel(file_path)
+#order_path = r'C:\Users\JFROJAS\Desktop\PARSER\Novo\Archivos\03 Order_Detail_Report_Mexico_original - MEDISITK.xlsx'
+df = pd.read_excel(order_path)
 df = df.iloc[:, [2, 13, 14, 16]]
 df.columns = ['Id'] + list(df.columns[1:])
 
 
 # Master de clientes
-master_path = r'C:\Users\JFROJAS\Desktop\PARSER\Novo\Archivos\Maestro de Clientes (1).xlsx'
+#master_path = r'C:\Users\JFROJAS\Desktop\PARSER\Novo\Archivos\Maestro de Clientes (1).xlsx'
 df_master = pd.read_excel(master_path, header=6)
 df_master = df_master.iloc[:, [1]]
 
@@ -44,7 +45,24 @@ df = df.rename(columns={'Sample Product Code': 'Codigo Producto'})
 
 df_final = df.iloc[:, [4, 5, 1, 6, 7, 2, 9, 10]]
 
-df_final.to_excel('test.xlsx', index=False)
+
+# Buscamos los clientes que no están en el maestro
+clientes_faltantes = []
+for cliente in df['Bill To']:
+    if cliente not in df_master['Cliente'].values:
+        clientes_faltantes.append(cliente)
+
+#GUI
+if clientes_faltantes:
+    # Los convertimos a un dataframe y los guardamos en un archivo de excel
+    clientes_faltantes_df = pd.DataFrame(clientes_faltantes, columns=['Cliente'])
+    clientes_faltantes_df.to_excel('Clientes Faltantes.xlsx', index=False)
+    sg.Popup(f"Se han encontrado {len(clientes_faltantes)} clientes faltantes. Revisa el archivo 'Clientes Faltantes.xlsx'.")
+else:
+    sg.Popup("Todos los clientes están registrados en el sistema.")
+
+
+#df_final.to_excel('test.xlsx', index=False)
 
 print(df_final.head())
-#print(df_master.keys())
+#print(df_master.head())
